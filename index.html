@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NhacCuaTui Pro - Ultimate Edition</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #121212; color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        #loginScreen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; padding: 20px; background: #121212;
+        }
+        .login-card {
+            width: 100%; max-width: 380px; background: #1c1e24; padding: 30px; border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7); text-align: center; border: 1px solid #2ebd59;
+        }
+        .login-card h2 { color: #2ebd59; margin-bottom: 20px; font-size: 24px; }
+        .login-card input {
+            width: 100%; padding: 14px; margin-bottom: 15px; background: #262930; border: 1px solid #444;
+            border-radius: 8px; color: #fff; font-size: 15px; outline: none;
+        }
+        .btn-green {
+            width: 100%; padding: 14px; background: #2ebd59; color: #000; font-weight: bold; border: none;
+            border-radius: 8px; font-size: 16px; cursor: pointer;
+        }
+        .btn-green:hover { background: #26a54e; color: #fff; }
+
+        #appScreen { display: none; flex-direction: column; height: 100vh; padding-bottom: 100px; }
+        header {
+            display: flex; justify-content: space-between; align-items: center; background: #1c1e24;
+            padding: 12px 20px; border-bottom: 1px solid #2a2e39; position: sticky; top: 0; z-index: 10;
+        }
+        .logo { font-size: 20px; font-weight: bold; color: #2ebd59; }
+        .user-info { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #aaa; }
+        .btn-logout { background: #333; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+
+        .main-content { flex: 1; padding: 15px; max-width: 600px; width: 100%; margin: 0 auto; overflow-y: auto; }
+        
+        .upload-box {
+            background: #1c1e24; border: 2px dashed #2ebd59; padding: 20px; border-radius: 12px;
+            text-align: center; cursor: pointer; margin-bottom: 20px;
+        }
+        .upload-box input { display: none; }
+        .upload-text { color: #2ebd59; font-weight: bold; font-size: 15px; }
+
+        .player-display {
+            background: #1c1e24; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 20px;
+        }
+        .vinyl-container {
+            width: 130px; height: 130px; margin: 10px auto; border-radius: 50%; background: #000;
+            border: 6px solid #2a2e39; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px rgba(46,189,89,0.3);
+        }
+        .vinyl-container.spin { animation: spin 4s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .vinyl-center { width: 40px; height: 40px; background: #2ebd59; border-radius: 50%; border: 3px solid #fff; }
+
+        video { width: 100%; max-height: 200px; border-radius: 8px; background: #000; display: none; margin-bottom: 10px; }
+        .now-playing-title { font-size: 15px; font-weight: bold; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Thanh tua nhạc & Thời gian */
+        .progress-container { margin-bottom: 15px; }
+        .progress-bar { width: 100%; accent-color: #2ebd59; cursor: pointer; margin-bottom: 5px; }
+        .time-info { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
+
+        .volume-box {
+            display: flex; align-items: center; justify-content: space-between; background: #262930;
+            padding: 8px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;
+        }
+
+        .playlist-header { font-size: 15px; font-weight: bold; color: #aaa; margin-bottom: 10px; border-left: 3px solid #2ebd59; padding-left: 8px; }
+        .playlist { display: flex; flex-direction: column; gap: 8px; }
+        .track-item {
+            display: flex; justify-content: space-between; align-items: center; background: #1c1e24;
+            padding: 12px 15px; border-radius: 8px; cursor: pointer; border: 1px solid transparent;
+        }
+        .track-item:hover { background: #222630; border-color: #2ebd59; }
+        .track-item.active { background: #1e3025; border-color: #2ebd59; color: #2ebd59; font-weight: bold; }
+        .track-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%; }
+        .track-badge { font-size: 11px; background: #2a2e39; padding: 2px 6px; border-radius: 4px; color: #2ebd59; }
+
+        /* Bottom Bar nâng cấp đầy đủ nút */
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #181a20; border-top: 1px solid #2a2e39;
+            padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 100;
+        }
+        .bottom-info { font-size: 13px; max-width: 40%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bottom-controls { display: flex; gap: 8px; align-items: center; }
+        .bottom-controls button {
+            background: #262930; color: #fff; border: none; width: 34px; height: 34px; border-radius: 50%;
+            font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .bottom-controls button.main-play { background: #2ebd59; color: #000; width: 40px; height: 40px; font-size: 16px; font-weight: bold; }
+        .bottom-controls button.active-mode { color: #2ebd59; border: 1px solid #2ebd59; }
+    </style>
+</head>
+<body>
+
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
+    <div id="loginScreen">
+        <div class="login-card">
+            <h2>NhacCuaTui Pro</h2>
+            <p style="color:#aaa; font-size:13px; margin-bottom:20px;">Đăng nhập bằng Email để lưu & nghe nhạc offline</p>
+            <input type="email" id="emailInput" placeholder="nhapemail@gmail.com">
+            <button class="btn-green" onclick="handleLogin()">Vào Ứng Dụng</button>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH CHÍNH -->
+    <div id="appScreen">
+        <header>
+            <div class="logo">🎵 NCT Cloud</div>
+            <div class="user-info">
+                <span id="displayEmail"></span>
+                <button class="btn-logout" onclick="handleLogout()">Thoát</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <label class="upload-box" for="fileInput">
+                <div class="upload-text">📁 Tải Nhạc (MP3) hoặc Video (MP4) Lên</div>
+                <div style="font-size: 12px; color: #777; margin-top: 5px;">Lưu trữ offline trên máy, nghe khi không có mạng</div>
+                <input type="file" id="fileInput" accept="audio/*,video/*" multiple>
+            </label>
+
+            <div class="player-display">
+                <div class="vinyl-container" id="vinylDisc">
+                    <div class="vinyl-center"></div>
+                </div>
+                <video id="videoPlayer" controls playsinline></video>
+                <div class="now-playing-title" id="nowPlayingTitle">Chưa chọn bài hát nào</div>
+                
+                <!-- Thanh tua nhạc & thời gian -->
+                <div class="progress-container">
+                    <input type="range" id="progressBar" class="progress-bar" value="0" min="0" max="100" step="0.1">
+                    <div class="time-info">
+                        <span id="currentTime">0:00</span>
+                        <span id="durationTime">0:00</span>
+                    </div>
+                </div>
+
+                <div class="volume-box">
+                    <span>Khuếch đại âm lượng (300%):</span>
+                    <span id="volText" style="color:#2ebd59; font-weight:bold;">100%</span>
+                </div>
+                <input type="range" id="volumeSlider" min="0.1" max="3" step="0.1" value="1" style="width:100%; accent-color:#2ebd59;">
+            </div>
+
+            <div class="playlist-header">Danh sách phát của bạn</div>
+            <div class="playlist" id="playlistContainer">
+                <div style="text-align:center; color:#666; padding:20px;">Chưa có bài hát nào</div>
+            </div>
+        </div>
+
+        <!-- Thanh điều khiển đầy đủ: Shuffle, Prev, Play/Pause, Next, Loop -->
+        <div class="bottom-bar">
+            <div class="bottom-info" id="bottomTitle">Chưa phát</div>
+            <div class="bottom-controls">
+                <button id="shuffleBtn" onclick="toggleShuffle()" title="Phát ngẫu nhiên">🔀</button>
+                <button onclick="playPrev()" title="Bài trước">⏮</button>
+                <button id="playPauseBtn" class="main-play" onclick="togglePlayPause()" title="Phát / Dừng">▶</button>
+                <button onclick="playNext()" title="Bài sau">⏭</button>
+                <button id="loopBtn" onclick="toggleLoop()" title="Lặp lại">🔁</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioPlayer"></audio>
+
+    <script>
+        let db;
+        const dbRequest = indexedDB.open("NCT_UltimateDB", 1);
+        dbRequest.onerror = () => console.log("Lỗi mở DB");
+        dbRequest.onsuccess = (e) => { db = e.target.result; loadLocalTracks(); };
+        dbRequest.onupgradeneeded = (e) => {
+            const database = e.target.result;
+            if (!database.objectStoreNames.contains("tracks")) {
+                database.createObjectStore("tracks", { keyPath: "id" });
+            }
+        };
+
+        let currentUser = localStorage.getItem('nct_current_user');
+        let playlist = [];
+        let currentIndex = 0;
+        let isVideoMode = false;
+        let isShuffle = false;
+        let isLoop = false;
+        let wakeLock = null;
+
+        const audioPlayer = document.getElementById('audioPlayer');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const vinylDisc = document.getElementById('vinylDisc');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volText = document.getElementById('volText');
+        const progressBar = document.getElementById('progressBar');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationTimeEl = document.getElementById('durationTime');
+
+        let audioCtx, sourceNode, gainNode;
+
+        if (currentUser) showAppScreen();
+
+        function handleLogin() {
+            const email = document.getElementById('emailInput').value.trim();
+            if (!email || !email.includes('@')) {
+                alert('Vui lòng nhập email hợp lệ!');
+                return;
+            }
+            currentUser = email;
+            localStorage.setItem('nct_current_user', currentUser);
+            showAppScreen();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('nct_current_user');
+            audioPlayer.pause();
+            videoPlayer.pause();
+            releaseWakeLock();
+            document.getElementById('appScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+
+        function showAppScreen() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'flex';
+            document.getElementById('displayEmail').innerText = currentUser;
+            loadLocalTracks();
+        }
+
+        function saveTrackToIndexedDB(trackData) {
+            if (!db) return;
+            const tx = db.transaction("tracks", "readwrite");
+            tx.objectStore("tracks").put(trackData);
+        }
+
+        function loadLocalTracks() {
+            if (!db) return;
+            const tx = db.transaction("tracks", "readonly");
+            const request = tx.objectStore("tracks").getAll();
+            request.onsuccess = () => {
+                playlist = request.result || [];
+                renderPlaylist();
+            };
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = e.target.files;
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const newTrack = {
+                        id: 'track_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                        name: file.name,
+                        type: file.type.includes('video') ? 'video' : 'audio',
+                        data: event.target.result,
+                        user: currentUser
+                    };
+                    playlist.push(newTrack);
+                    saveTrackToIndexedDB(newTrack);
+                    renderPlaylist();
+                    if (playlist.length === 1) playTrack(0);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function renderPlaylist() {
+            const container = document.getElementById('playlistContainer');
+            container.innerHTML = '';
+            if (playlist.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#666; padding:20px; font-size:13px;">Chưa có bài hát nào</div>';
+                return;
+            }
+            playlist.forEach((track, index) => {
+                const div = document.createElement('div');
+                div.className = `track-item ${index === currentIndex ? 'active' : ''}`;
+                div.innerHTML = `<div class="track-name">🎵 ${track.name}</div><div class="track-badge">${track.type.toUpperCase()}</div>`;
+                div.onclick = () => playTrack(index);
+                container.appendChild(div);
+            });
+        }
+
+        function getActivePlayer() { return isVideoMode ? videoPlayer : audioPlayer; }
+
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator && !wakeLock) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {}
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release().then(() => { wakeLock = null; });
+            }
+        }
+
+        function playTrack(index) {
+            if (index < 0 || index >= playlist.length) return;
+            currentIndex = index;
+            const track = playlist[currentIndex];
+
+            audioPlayer.pause();
+            videoPlayer.pause();
+
+            initAudioContext();
+            requestWakeLock();
+
+            if (track.type === 'video') {
+                isVideoMode = true;
+                videoPlayer.style.display = 'block';
+                vinylDisc.style.display = 'none';
+                videoPlayer.src = track.data;
+                videoPlayer.play().then(() => updateMediaSessionState('playing'));
+            } else {
+                isVideoMode = false;
+                videoPlayer.style.display = 'none';
+                vinylDisc.style.display = 'flex';
+                audioPlayer.src = track.data;
+                audioPlayer.play().then(() => updateMediaSessionState('playing'));
+                vinylDisc.classList.add('spin');
+            }
+
+            document.getElementById('nowPlayingTitle').innerText = track.name;
+            document.getElementById('bottomTitle').innerText = track.name;
+            document.getElementById('playPauseBtn').innerText = '⏸';
+            
+            renderPlaylist();
+            setupMediaSession(track);
+        }
+
+        function togglePlayPause() {
+            const player = getActivePlayer();
+            if (player.paused) {
+                player.play().then(() => updateMediaSessionState('playing'));
+                requestWakeLock();
+                document.getElementById('playPauseBtn').innerText = '⏸';
+                if (!isVideoMode) vinylDisc.classList.add('spin');
+            } else {
+                player.pause();
+                releaseWakeLock();
+                updateMediaSessionState('paused');
+                document.getElementById('playPauseBtn').innerText = '▶';
+                if (!isVideoMode) vinylDisc.classList.remove('spin');
+            }
+        }
+
+        function playPrev() {
+            if (isShuffle) {
+                playTrack(Math.floor(Math.random() * playlist.length));
+            } else {
+                playTrack(currentIndex - 1 >= 0 ? currentIndex - 1 : playlist.length - 1);
+            }
+        }
+
+        function playNext() {
+            if (isShuffle) {
+                playTrack(Math.floor(Math.random() * playlist.length));
+            } else {
+                playTrack(currentIndex + 1 < playlist.length ? currentIndex + 1 : 0);
+            }
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            document.getElementById('shuffleBtn').classList.toggle('active-mode', isShuffle);
+        }
+
+        function toggleLoop() {
+            isLoop = !isLoop;
+            document.getElementById('loopBtn').classList.toggle('active-mode', isLoop);
+        }
+
+        // Cập nhật thanh thời gian & tua nhạc
+        const activePlayer = () => getActivePlayer();
+        
+        setInterval(() => {
+            const player = getActivePlayer();
+            if (!player.paused && player.duration) {
+                const progress = (player.currentTime / player.duration) * 100;
+                progressBar.value = progress;
+                currentTimeEl.innerText = formatTime(player.currentTime);
+                durationTimeEl.innerText = formatTime(player.duration);
+            }
+        }, 300);
+
+        progressBar.addEventListener('input', function() {
+            const player = getActivePlayer();
+            if (player.duration) {
+                player.currentTime = (this.value / 100) * player.duration;
+            }
+        });
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        audioPlayer.onended = function() {
+            if (isLoop) { audioPlayer.play(); } else { playNext(); }
+        };
+        videoPlayer.onended = function() {
+            if (isLoop) { videoPlayer.play(); } else { playNext(); }
+        };
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContext();
+                    const activeEl = getActivePlayer();
+                    sourceNode = audioCtx.createMediaElementSource(activeEl);
+                    gainNode = audioCtx.createGain();
+                    sourceNode.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                } catch(e) {}
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Cơ chế chống tắt tiếng nền chuyên sâu cho APK Android
+        setInterval(() => {
+            if (audioCtx && audioCtx.state === 'suspended' && !getActivePlayer().paused) {
+                audioCtx.resume();
+            }
+        }, 400);
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        });
+
+        volumeSlider.addEventListener('input', function() {
+            initAudioContext();
+            const val = parseFloat(this.value);
+            if (gainNode) gainNode.gain.value = val;
+            volText.innerText = Math.round(val * 100) + '%';
+        });
+
+        function setupMediaSession(track) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: track.name,
+                    artist: currentUser,
+                    album: 'NhacCuaTui Pro Ultimate'
+                });
+                navigator.mediaSession.setActionHandler('play', () => togglePlayPause());
+                navigator.mediaSession.setActionHandler('pause', () => togglePlayPause());
+                navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+                navigator.mediaSession.setActionHandler('nexttrack', playNext);
+            }
+        }
+
+        function updateMediaSessionState(state) {
+            if ('mediaSession' in navigator) {
